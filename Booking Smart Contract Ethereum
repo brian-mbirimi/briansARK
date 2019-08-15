@@ -1,0 +1,70 @@
+pragma solidity ^0.4.17;
+contract Booking{
+ address public host;
+ address public tennant;
+ uint public pricePerDay;
+ string private videoLink= "No link provided";
+ bool public isDisputed= false;
+ bool public isBooked= false;
+ bool public videoProvided = false;
+ uint public security;
+
+ function Booking(uint costPerDay) public{
+ host = msg.sender;
+ pricePerDay = costPerDay;
+ security = costPerDay;
+ }
+ function bookRoom(uint day) public payable{-
+ require(msg.sender != host);
+ require(isBooked == false);
+ require(isDisputed == false);
+ uint totalcost = (pricePerDay * day) + security;
+ require(msg.value > totalcost);
+ isBooked = true;
+ tennant = msg.sender;
+ }
+ function saveVideo(string encryptedVideoLink) public {
+ require(msg.sender == host);
+ require(isBooked == true);
+ videoProvided = true;
+ videoLink = encryptedVideoLink;
+ }
+ function checkOut() public{
+ require(isBooked == true);
+ require(videoProvided == true);
+ require(msg.sender == tennant);
+ isBooked = false;
+ tennant.transfer(security);
+ host.transfer(this.balance);
+ videoProvided = false;
+ }
+ function openDispute() public {
+ require(videoProvided == true);
+ require(msg.sender == host || msg.sender==host);
+ isDisputed = true;
+ isBooked= false;
+ }
+ function getVideoLink() public view returns(string) {
+ require(isDisputed == true);
+ require(msg.sender == host || msg.sender == tennant);
+ return videoLink;
+ }
+ function transferToHost() public{
+ require(isDisputed == true);
+ require(msg.sender == tennant);
+ isDisputed= false;
+ host.transfer(security);
+ host.transfer(this.balance);
+ videoProvided = false;
+ }
+ function transferToTennant() public{
+ require(isDisputed == true);
+ require(msg.sender == host);
+ isDisputed = false;
+ tennant.transfer(this.balance);
+ videoProvided = false;
+ }
+ function checkBalance() public view returns(uint){
+ return this.balance;
+ }
+}
